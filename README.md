@@ -1,75 +1,110 @@
-# 🎵 Songs Prediction Market Simulation
+# Music Prediction Marketplace Simulation
 
-Monte Carlo simulation for a pre-release song prediction market. Test whether users can profitably bet on songs hitting 1M views in their first week — and whether the system resists gaming.
+A fully simulated music marketplace where pre-released songs are listed, users create prediction contracts with custom stream targets and evaluation periods, the platform takes a 20% trading fee, an anti-cheat system prevents bot purchases, and a "Future of Records" committee resolves disputes in 2 days.
 
-## 🎯 What This Simulates
+## What This Simulates
 
-**Concept:** Artists upload pre-release songs. Users bet YES/NO on whether it will hit 1M streams/views in the first week. Platform takes fees to fund artist development.
+**Concept:** Creators submit pre-released songs. Any user can create a prediction contract specifying a stream target (e.g., 1M streams) and evaluation period (e.g., 30 days). Traders buy YES/NO shares. The platform collects a 20% fee on every trade. Anti-cheat mechanisms detect bot stream purchases and insider trading. Disputed contracts are settled by the "Future of Records" committee within 2 days.
 
 **Key Questions:**
-1. How accurate are prediction markets at forecasting song virality?
-2. Can artists game the system with fake "pre-releases" or bot views?
-3. What detection mechanisms protect market integrity?
+1. Can a 20% fee marketplace sustain healthy trading economics?
+2. How effective are anti-cheat mechanisms at catching bot stream purchases?
+3. Does the 2-day committee dispute resolution work fairly?
+4. What happens when creators try to game their own songs' markets?
 
-## 📊 Quick Results
-
-| Scenario | Gaming Profitable | Avg Loss for Gamers | Detection Rate |
-|----------|-------------------|---------------------|----------------|
-| Base (70% bot detection) | 5% | -$4,425 | 91% |
-| Weak detection (40%) | 4% | -$4,415 | 94% |
-| Strong detection (90%) | 4% | -$7,552 | 91% |
-
-**Conclusion:** Gaming attempts fail ~95% of the time. Average attacker loses $4,000-7,500. System is manipulation-resistant.
-
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# Clone
-git clone https://github.com/liubosdzl33/songs-prediction-market-simulation.git
-cd songs-prediction-market-simulation
-
 # Setup
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Run simulation
-python src/simulation.py
+# Run default simulation (200 songs, 100 traders, 20% fee)
+python3 src/simulation.py
 
-# Run with custom parameters
-python src/simulation.py --songs 1000 --gaming-rate 0.3 --bot-detection 0.8
+# Custom simulation
+python3 src/simulation.py --songs 500 --traders 200 --gaming-rate 0.3 --bot-detection 0.9
+
+# Reproducible run
+python3 src/simulation.py --seed 42
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 songs-prediction-market-simulation/
 ├── README.md
 ├── requirements.txt
 ├── src/
-│   ├── simulation.py          # Main simulation runner
-│   ├── market.py              # AMM betting market logic
-│   ├── oracle.py              # Multi-source view count oracle
-│   ├── agents.py              # Bettor agent behaviors
-│   ├── gaming.py              # Attack vector simulations
-│   └── analysis.py            # Results analysis & visualization
-├── tests/
-│   └── test_market.py
-├── results/                   # Output CSVs and charts
+│   ├── simulation.py       # Main simulation runner & CLI
+│   ├── models.py           # Core data models (User, Song, Contract, Trade, Dispute)
+│   ├── trading.py          # Trading engine with 20% fee & AMM
+│   ├── anti_cheat.py       # Bot detection, creator restrictions, sybil detection
+│   ├── dispute.py          # "Future of Records" committee dispute resolution
+│   ├── agents.py           # Bettor agent behaviors (noise, informed, whale, arb)
+│   ├── market.py           # Legacy AMM implementation
+│   └── gaming.py           # Legacy gaming attack models
 └── docs/
-    ├── METHODOLOGY.md         # Simulation methodology
-    ├── PARAMETERS.md          # Parameter definitions
-    └── ORACLE_DESIGN.md       # Multi-source oracle architecture
+    ├── METHODOLOGY.md
+    └── PARAMETERS.md
 ```
 
-## 🎲 Simulation Components
+## Core Features
 
-### 1. Betting Market (AMM)
-- Constant product market maker (x × y = k)
-- 2% trading fee
-- Initial liquidity: $1,000 per side
+### 1. User-Configurable Prediction Contracts
 
-### 2. Agent Types
+Users set their own parameters when creating contracts:
+
+| Parameter | Options | Description |
+|-----------|---------|-------------|
+| Target Streams | 100K, 250K, 500K, 1M, 2M, 5M, 10M | Streams needed to resolve YES |
+| Evaluation Period | 7, 14, 30, 60, 90 days | Window to reach the target |
+
+### 2. 20% Platform Trading Fee
+
+Every trade is charged a 20% fee, distributed as:
+
+| Recipient | Share | Purpose |
+|-----------|-------|---------|
+| Platform Revenue | 50% | Operating costs |
+| Liquidity Pool | 30% | Market depth reserves |
+| Dispute Fund | 20% | Committee compensation & refunds |
+
+### 3. Anti-Cheat System
+
+Prevents song creators from gaming with bot purchases:
+
+- **Bot Stream Detection**: Analyzes geographic patterns, temporal anomalies, repeat listener ratios, device diversity, and stream velocity spikes
+- **Creator Self-Trading Ban**: Creators cannot trade on their own songs' contracts
+- **Associated Account Detection**: Linked wallets/IPs are flagged and restricted
+- **Cooling-Off Period**: 24-hour wait after song submission before any trading opens
+- **Stream Audit**: Contracts voided if >30% of streams are artificial
+- **Sybil Detection**: Coordinated trading patterns and wash trading flagged
+
+### 4. Dispute Resolution ("Future of Records" Committee)
+
+A 3-7 member committee settles disputed contracts in 2 days:
+
+| Day | Phase | Activity |
+|-----|-------|----------|
+| 0 | Filing | Dispute filed, payouts frozen, 5% deposit required |
+| 0-0.5 | Evidence | Evidence collection from all parties |
+| 0.5-1.5 | Review | Committee reviews and votes (majority rules) |
+| 2.0 | Resolution | Decision published, funds distributed |
+
+**Dispute Types:**
+- Stream Manipulation (bot streams)
+- Insider Trading (creator traded own song)
+- False Reporting (incorrect stream counts)
+- Market Manipulation (wash trading)
+
+**Outcomes:**
+- **Upheld**: Original resolution stands, disputer loses 5% deposit
+- **Overturned**: Market voided, traders refunded
+- **Partial**: Partial refund, manipulated portion removed
+- **Penalty**: Creator banned, funds redistributed to honest traders
+
+### 5. Agent Types
+
 | Agent | Behavior | % of Bettors |
 |-------|----------|--------------|
 | Noise | Random YES/NO | 60% |
@@ -77,88 +112,57 @@ songs-prediction-market-simulation/
 | Whale | Large bets, slight edge | 10% |
 | Arbitrageur | Corrects mispricing | 10% |
 
-### 3. Gaming Attack Vectors
-| Attack | Description | Success Rate |
-|--------|-------------|--------------|
-| Fake pre-release | Song has hidden existing fanbase | 6% profitable |
-| Bot views | Purchase fake streams/views | 0% profitable |
-| Combined | Both tactics | 9% profitable |
-
-### 4. Detection Mechanisms
-- Large early bet flagging (insider trading pattern)
-- Suspicious price movement detection
-- Bot view removal (platform-side)
-- View velocity anomaly detection
-- Prior audience discovery (social listening)
-
-## ⚙️ Key Parameters
+## CLI Parameters
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `--songs` | 500 | Number of songs to simulate |
-| `--gaming-rate` | 0.2 | % of submissions that are gaming attempts |
-| `--bot-detection` | 0.7 | Platform bot view removal rate |
-| `--daily-bettors` | 50 | Average bettors per day |
-| `--bet-size-median` | 25 | Median bet size ($) |
-| `--platform-fee` | 0.02 | Trading fee (2%) |
+| `--songs` | 200 | Number of songs to simulate |
+| `--traders` | 100 | Number of traders |
+| `--creators` | 20 | Number of creators |
+| `--gaming-rate` | 0.2 | Fraction of gaming attempts |
+| `--bot-detection` | 0.75 | Bot stream detection rate |
+| `--platform-fee` | 0.20 | Trading fee (20%) |
+| `--dispute-rate` | 0.15 | Dispute filing rate |
+| `--committee-size` | 5 | Committee members |
+| `--daily-bettors` | 30 | Avg daily bettors per contract |
+| `--seed` | None | Random seed for reproducibility |
+| `--output` | marketplace_results | Output file prefix |
 
-## 📈 Output
+## Output
 
 The simulation produces:
 
-1. **Console summary** — Key metrics and recommendations
-2. **CSV files** — Detailed per-song results
-3. **JSON summary** — Structured analysis for programmatic use
+1. **Console report** with marketplace economics, anti-cheat stats, dispute outcomes
+2. **CSV file** with per-contract detailed results
+3. **JSON file** with structured aggregate analysis
 
 Example output:
 ```
-📊 Gaming Profitability by Scenario:
-  BASE (20% gaming, 70% detect)
-    Profitable: 4.7%  |  Avg profit: $-4,425
-    
-🎯 Detection Effectiveness:
-  Catch rate: 91%  |  False positives: 0%
-  
-⚠️  RECOMMENDATIONS:
-  • BOT VULNERABILITY: Bot views too effective. Partner with platforms.
+======================================================================
+  MUSIC PREDICTION MARKETPLACE - SIMULATION RESULTS
+======================================================================
+
+--- Economics (20% Platform Fee) ---
+  Total trading volume: $707,328
+  Total fees collected: $141,466
+  Platform revenue (50%): $70,733
+  Dispute fund (20%):    $28,293
+
+--- Anti-Cheat Effectiveness ---
+  Gaming detection rate: 50.0%
+  False positive rate: 0.0%
+  Contracts voided: 33
+
+--- Dispute Resolution (2-Day Timeline) ---
+  Committee: 'Future of Records' (5 members)
+  Total disputes filed: 11
+  Committee accuracy: 85.5%
 ```
 
-## 🔬 Methodology
-
-See [docs/METHODOLOGY.md](docs/METHODOLOGY.md) for detailed explanation of:
-- View count normalization across platforms
-- Oracle consensus mechanism
-- Gaming profit/loss calculation
-- Detection scoring algorithm
-
-## 🛡️ Oracle Design
-
-Multi-source oracle to prevent manipulation:
-
-| Source | Weight | Notes |
-|--------|--------|-------|
-| YouTube API | 25% | Official, bot-resistant |
-| Chartmetric | 25% | 80M+ tracks aggregated |
-| Songstats | 20% | 14 platform coverage |
-| Viberate | 15% | Affordable backup |
-| Spotify scrape | 15% | Actual stream counts |
-
-**Consensus:** Require 3/5 sources within 10% of median.
-
-See [docs/ORACLE_DESIGN.md](docs/ORACLE_DESIGN.md) for full architecture.
-
-## 📜 License
+## License
 
 MIT
 
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push (`git push origin feature/amazing`)
-5. Open PR
-
-## 📧 Contact
+## Contact
 
 Built for [Future of Records](https://futureofrecords.com) — prediction markets for music.

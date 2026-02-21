@@ -1,1 +1,1 @@
-# Songs Prediction Market Simulation
+# Music Prediction Marketplace
